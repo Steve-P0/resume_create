@@ -1,10 +1,11 @@
+var g;
+
 function Input(init){
     'use strict';
     this.id = init.id;
     this.type = init.type === undefined? 'text':init.type;
     this.placeholder = init.placeholder;
     this.$element = null;
-    this.text = '';
 
     this.init = function(){
         this.$element = $('<input>').attr({
@@ -12,15 +13,39 @@ function Input(init){
             'type': this.type,
             'placeholder': this.placeholder
         });
-        this.$element.bind('change', function(){this.text = $(this).text();});
+        if(localStorage.getItem(this.id)){
+                this.$element.attr('value',localStorage.getItem(this.id));
+        }
+        $(document).on('change', '#'+this.id,
+            function(){
+                localStorage.setItem($(this).attr('id'),$(this).val());
+            }
+        );
     };
 
     this.get_html = function(){
-        return $('<div>').append(this.$element.clone()).html();
+        return this.$element;
     };
 
     (function(self){self.init();})(this);
     return this;
+}
+
+function section_nav(){
+    'use strict';
+    var $nav = $('<div>').addClass('page__nav');
+    var $prev = $('<div>').addClass('prev').html('назад')
+        .attr({
+            onclick: 'g.prev()',
+            onselectstart: 'return false;'
+        });
+    var $next = $('<div>').addClass('next').html('вперед')
+        .attr({
+            onclick: 'g.next()',
+            onselectstart: 'return false;'
+        });
+    $nav.append($prev, $next);
+    return $nav;
 }
 
 //page - {title, input/text}
@@ -30,6 +55,8 @@ function Page(page){
     this.title = page.title;
     this.input = null;
     this.content = null;
+    this.$nav = section_nav();
+
     if (page.input){
         this.input = new Input(page.input);
     }
@@ -50,6 +77,7 @@ function Page(page){
             var $content = this.content;
             $html.append($content);
         }
+        $html.append(this.$nav);
 
         return $('<div>').append($html.clone()).html();
     };
@@ -61,7 +89,7 @@ function Section(name){
     'use strict';
     this.name = name;
     this.pages = [];
-    this.current = 0;
+    this.current_page = 0;
     this.$element = null;
     this.$wrapper = $('#section_wrapper');
 
@@ -76,14 +104,28 @@ function Section(name){
 
     this.open_page = function(page_num){
         this.$element.html(this.pages[page_num].get_html());
-        this.current = page_num;
+        this.current_page = page_num;
     };
-    this.open_next_page = function(){};
-    this.open_prev_page = function(){};
+    this.next_page = function(){
+        var next = this.current_page+1;
+        if(next < this.pages.length){
+            this.open_page(next);
+            return true;
+        }
+        return false;
+    };
+    this.prev_page = function(){
+        var prev = this.current_page-1;
+        if(prev > -1){
+            this.open_page(prev);
+            return true;
+        }
+        return false;
+    };
 
-    this.show = function(page_num){
+    this.show = function(){
         this.$wrapper.append(this.$element);
-        this.open_page(this.current);
+        this.open_page(this.current_page );
     };
     this.close = function(){
         this.$element.detach();
@@ -92,7 +134,72 @@ function Section(name){
     return this;
 }
 
-function Pages_nav(){}
+
+
+function RenderHandler(){
+    'use strict';
+    this.current_section_num = null;
+    this.current_section = null;
+    this.sections = null;
+
+    this.next_section = function(){
+        return (this.show(this.current_section_num+1));
+    };
+
+    this.prev_section = function(){
+        return (this.show(this.current_section_num-1));
+    };
+
+    this.next = function(){
+        var temp = this.current_section;
+        if (!this.current_section.next_page()){
+            return this.next_section()
+        }
+        return false;
+    }
+    this.prev = function(){
+        if (!this.current_section.prev_page()){
+            return this.prev_section()
+        }
+        return false;
+    }
+
+    this.set_section_by_name = function(section_name){
+        for (var i =0;i<this.sections.length; i++){
+            if (this.sections[i].name === section_name){
+                this.current_section =  this.sections[i];
+                this.current_section_num = i;
+                return true;
+            }
+        }
+    };
+
+    this.set_section_by_num = function(section_num){
+        for (var i =0;i<this.sections.length; i++){
+            if (i === section_num){
+                this.current_section =  this.sections[i];
+                this.current_section_num = i;
+                return true;
+            }
+        }
+    };
+
+    this.show = function(section){
+        var temp = this.current_section;
+
+        if(this.set_section_by_name(section) || this.set_section_by_num(section)){
+            this.current_section.show();
+            $("#"+this.current_section.name).addClass('active').siblings().removeClass('active');
+            if (temp){
+                temp.close();
+            }
+            return true;
+        }
+        else{
+            return false;
+        }
+    };
+}
 
 function init_intro(){
     'use strict';
@@ -144,7 +251,7 @@ function init_personal_information(){
             }
         },
         {
-            'title':'У тебя есть <b>портфолио</b>, или <b>linkedin</b>, или что-нибудь?',
+            'title':'У тебя есть <b>портфолио</b>, или <b>linkedin</b>, хоть что-нибудь?',
             'input':{
                 'id':'portfolio',
                 'placeholder':'www.linkedin.com'
@@ -152,27 +259,28 @@ function init_personal_information(){
         },
     ];
 
-    var PersonalInformationSection = new Section('pers_information');
+    var PersonalInformationSection = new Section('personal_information');
 
     PersonalInformationSection.init_pages(pages);
 
-    PersonalInformationSection.$element = $('<section>').attr('id', 'pers_information');
+    PersonalInformationSection.$element = $('<section>').attr('id', 'personal_information');
 
     return PersonalInformationSection;
 }
 
-var g = function(){};
+g = new RenderHandler();
 
 (function(){
     'use strict';
-    g.sections = {
-        'intro':init_intro(),
-        'personal_information': init_personal_information()};
+    g.sections = [
+        init_intro(),
+        init_personal_information()
+    ];
     $('.nav__item:not(.active)').click(function(){
         $(this).addClass('active').siblings().removeClass('active');
-        g.sections[$(this).data('link')].show();
+        g.show($(this).data('link'));
     });
-    $('.nav__item[href="#intro"]').click();
+    g.show('intro');
 
 
 })($, g);
