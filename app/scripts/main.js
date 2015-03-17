@@ -4,6 +4,7 @@ function Input(init){
     'use strict';
     this.id = init.id;
     this.type = init.type === undefined? 'text':init.type;
+    this.max_length = init.max_length? "60": init.max_length;
     this.placeholder = init.placeholder;
     this.$element = null;
 
@@ -11,7 +12,8 @@ function Input(init){
         this.$element = $('<input>').attr({
             'id': this.id,
             'type': this.type,
-            'placeholder': this.placeholder
+            'placeholder': this.placeholder,
+            'maxlength': this.max_length
         });
         if(localStorage.getItem(this.id)){
                 this.$element.attr('value',localStorage.getItem(this.id));
@@ -27,8 +29,37 @@ function Input(init){
         return this.$element;
     };
 
-    (function(self){self.init();})(this);
     return this;
+}
+
+function Textarea(init){
+    'use strict';
+    var self = new Input(init);
+    self.type = '';
+    self.rows = init.rows?init.rows:5;
+    self.cols = init.cols?init.cols:60;
+    self.max_length = init.max_length? "1200": init.max_length;
+
+
+    self.init = function(){
+        self.$element = $('<textarea>').attr({
+            'id': self.id,
+            'placeholder': self.placeholder,
+            'rows': self.rows,
+            'cols': self.cols,
+            'maxlength': self.max_length
+        });
+        if(localStorage.getItem(self.id)){
+                self.$element.attr('value',localStorage.getItem(self.id));
+        }
+        $(document).on('change', '#'+self.id,
+            function(){
+                localStorage.setItem($(self).attr('id'),$(self).val());
+            }
+        );
+    };
+
+    return self;
 }
 
 function section_nav(){
@@ -49,16 +80,22 @@ function section_nav(){
 }
 
 //page - {title, input/text}
-//input - {id, input, type}
+//inputs - {id, input, type}
 function Page(page){
     'use strict';
     this.title = page.title;
-    this.input = null;
+    this.inputs = [];
     this.content = null;
     this.$nav = section_nav();
 
-    if (page.input){
-        this.input = new Input(page.input);
+    if (page.inputs){
+        for( var i =0, l = page.inputs.length; i<l; i++ ){
+            if(page.inputs[i].type === 'textarea'){
+                this.inputs.push(new Textarea(page.inputs[i]));
+                continue;
+            }
+            this.inputs.push(new Input(page.inputs[i]));
+        }
     }
     if (page.text){
         this.content = page.text;
@@ -69,9 +106,11 @@ function Page(page){
 
         var $title = $('<div>').html('<h2>'+this.title+'</h2>');
         $html.append($title);
-        if (this.input){
-            var $input = this.input.get_html();
-            $html.append($input);
+        if (this.inputs){
+            $.each(this.inputs, function(index, val) {
+                val.init();
+                $html.append(val.get_html());
+            });
         }
         if(this.content){
             var $content = this.content;
@@ -90,7 +129,7 @@ function Section(name){
     this.name = name;
     this.pages = [];
     this.current_page = 0;
-    this.$element = null;
+    this.$element = $('<section>').attr('id', name);
     this.$wrapper = $('#section_wrapper');
 
     this.init_pages = function(pages){
@@ -125,7 +164,7 @@ function Section(name){
 
     this.show = function(){
         this.$wrapper.append(this.$element);
-        this.open_page(this.current_page );
+        this.open_page(this.current_page);
     };
     this.close = function(){
         this.$element.detach();
@@ -133,8 +172,6 @@ function Section(name){
 
     return this;
 }
-
-
 
 function RenderHandler(){
     'use strict';
@@ -151,18 +188,18 @@ function RenderHandler(){
     };
 
     this.next = function(){
-        var temp = this.current_section;
+        // var temp = this.current_section;
         if (!this.current_section.next_page()){
-            return this.next_section()
+            return this.next_section();
         }
         return false;
-    }
+    };
     this.prev = function(){
         if (!this.current_section.prev_page()){
-            return this.prev_section()
+            return this.prev_section();
         }
         return false;
-    }
+    };
 
     this.set_section_by_name = function(section_name){
         for (var i =0;i<this.sections.length; i++){
@@ -189,7 +226,7 @@ function RenderHandler(){
 
         if(this.set_section_by_name(section) || this.set_section_by_num(section)){
             this.current_section.show();
-            $("#"+this.current_section.name).addClass('active').siblings().removeClass('active');
+            $('#'+this.current_section.name).addClass('active').siblings().removeClass('active');
             if (temp){
                 temp.close();
             }
@@ -214,7 +251,7 @@ function init_intro(){
 
     IntroSection.init_pages(pages);
 
-    IntroSection.$element = $('<section>').attr('id', 'intro');
+    // IntroSection.$element = $('<section>').attr('id', 'intro');
 
     return IntroSection;
 }
@@ -224,38 +261,38 @@ function init_personal_information(){
     var pages = [
         {
             'title':'Начнем с простого, ваши <b>ФИО</b>.',
-            'input':{
+            'inputs':[{
                 'id':'full_name',
                 'placeholder':'Иванов Иван Иванович'
-            }
+            }]
         },
         {
             'title':'Немного сложнее, ваш <b>e-mail</b>.',
-            'input':{
-                'id':'e-mail',
-                'placeholder':'Ivanov@email.com'
-            }
+            'inputs':[{
+                            'id':'e-mail',
+                            'placeholder':'Ivanov@email.com'
+                        }]
         },
         {
             'title':'Я понимаю, мы только что познакомились, но можешь оставить свой <b>номер телефона</b>?',
-            'input':{
-                'id':'phone_number',
-                'placeholder':'+7 999 333 8877'
-            }
+            'inputs':[{
+                            'id':'phone_number',
+                            'placeholder':'+7 999 333 8877'
+                        }]
         },
         {
             'title':'Не сочти за наглость, но мне нужен твой <b>адрес</b>.',
-            'input':{
-                'id':'address',
-                'placeholder':'г.Пермь, ул. Академика Королёва, 15'
-            }
+            'inputs':[{
+                            'id':'address',
+                            'placeholder':'г.Пермь, ул. Академика Королёва, 15'
+                        }]
         },
         {
             'title':'У тебя есть <b>портфолио</b>, или <b>linkedin</b>, хоть что-нибудь?',
-            'input':{
-                'id':'portfolio',
-                'placeholder':'www.linkedin.com'
-            }
+            'inputs':[{
+                            'id':'portfolio',
+                            'placeholder':'www.linkedin.com'
+                        }]
         },
     ];
 
@@ -263,9 +300,32 @@ function init_personal_information(){
 
     PersonalInformationSection.init_pages(pages);
 
-    PersonalInformationSection.$element = $('<section>').attr('id', 'personal_information');
+    // PersonalInformationSection.$element = $('<section>').attr('id', 'personal_information');
 
     return PersonalInformationSection;
+}
+
+function init_personal_statement(){
+    'use strict';
+    var pages = [
+        {
+            'title':'Хочешь указать какую-либо информацию о себе? Если нет, тебя никто не осудит.',
+            'inputs':[{
+                'id':'personal_statement_title',
+                'placeholder':'Пара слов о себе:'
+            },{
+                'id':'personal_statement',
+                'placeholder':'Великодушный, гениальный, неуступчивый...',
+                'type': 'textarea'
+            }
+            ]
+        },
+    ];
+
+    var PersonalStatementSection = new Section('personal_statement');
+    PersonalStatementSection.init_pages(pages);
+    // PersonalInformationSection.$element = $('<section>')
+    return PersonalStatementSection;
 }
 
 g = new RenderHandler();
@@ -274,11 +334,12 @@ g = new RenderHandler();
     'use strict';
     g.sections = [
         init_intro(),
-        init_personal_information()
+        init_personal_information(),
+        init_personal_statement()
     ];
     $('.nav__item:not(.active)').click(function(){
         $(this).addClass('active').siblings().removeClass('active');
-        g.show($(this).data('link'));
+        g.show($(this).attr('id'));
     });
     g.show('intro');
 
