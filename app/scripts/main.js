@@ -4,29 +4,30 @@ function Input(init){
     'use strict';
     this.id = init.id;
     this.type = init.type === undefined? 'text':init.type;
-    this.max_length = init.max_length? "60": init.max_length;
+    this.max_length = init.max_length === undefined? '60': init.max_length;
     this.placeholder = init.placeholder;
     this.$element = null;
 
     this.init = function(){
-        this.$element = $('<input>').attr({
+        this.$element = $('<input>',{
             'id': this.id,
             'type': this.type,
-            'placeholder': this.placeholder,
-            'maxlength': this.max_length
+            'maxlength': this.max_length,
+            'placeholder': this.placeholder
         });
         if(localStorage.getItem(this.id)){
                 this.$element.attr('value',localStorage.getItem(this.id));
         }
-        $(document).on('change', '#'+this.id,
+        $(document).on('input', '#'+this.id,
             function(){
                 localStorage.setItem($(this).attr('id'),$(this).val());
             }
         );
+
     };
 
     this.get_html = function(){
-        return this.$element;
+        return $('<div>').append(this.$element.clone()).html();
     };
 
     return this;
@@ -38,11 +39,11 @@ function Textarea(init){
     self.type = '';
     self.rows = init.rows?init.rows:5;
     self.cols = init.cols?init.cols:60;
-    self.max_length = init.max_length? "1200": init.max_length;
+    self.max_length = init.max_length === undefined? '1200': init.max_length;
 
 
     self.init = function(){
-        self.$element = $('<textarea>').attr({
+        self.$element = $('<textarea>',{
             'id': self.id,
             'placeholder': self.placeholder,
             'rows': self.rows,
@@ -50,11 +51,11 @@ function Textarea(init){
             'maxlength': self.max_length
         });
         if(localStorage.getItem(self.id)){
-                self.$element.attr('value',localStorage.getItem(self.id));
+                self.$element.text(localStorage.getItem(self.id));
         }
-        $(document).on('change', '#'+self.id,
+        $(document).on('input', '#'+self.id,
             function(){
-                localStorage.setItem($(self).attr('id'),$(self).val());
+                localStorage.setItem($(this).attr('id'),$(this).val());
             }
         );
     };
@@ -225,6 +226,9 @@ function RenderHandler(){
         var temp = this.current_section;
 
         if(this.set_section_by_name(section) || this.set_section_by_num(section)){
+            if (this.current_section === temp){
+                return false;
+            }
             this.current_section.show();
             $('#'+this.current_section.name).addClass('active').siblings().removeClass('active');
             if (temp){
@@ -314,7 +318,7 @@ function init_personal_statement(){
                 'id':'personal_statement_title',
                 'placeholder':'Пара слов о себе:'
             },{
-                'id':'personal_statement',
+                'id':'personal_statement_body',
                 'placeholder':'Великодушный, гениальный, неуступчивый...',
                 'type': 'textarea'
             }
@@ -337,9 +341,11 @@ g = new RenderHandler();
         init_personal_information(),
         init_personal_statement()
     ];
-    $('.nav__item:not(.active)').click(function(){
+    $('.nav__item').click(function(){
         $(this).addClass('active').siblings().removeClass('active');
         g.show($(this).attr('id'));
+    }).on('selectstart', function() {
+        event.preventDefault();
     });
     g.show('intro');
 
