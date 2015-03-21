@@ -1,67 +1,5 @@
 var g;
 
-function Input(init){
-    'use strict';
-    this.id = init.id;
-    this.type = init.type === undefined? 'text':init.type;
-    this.max_length = init.max_length === undefined? '60': init.max_length;
-    this.placeholder = init.placeholder;
-    this.$element = null;
-
-    this.init = function(){
-        this.$element = $('<input>',{
-            'id': this.id,
-            'type': this.type,
-            'maxlength': this.max_length,
-            'placeholder': this.placeholder
-        });
-        if(localStorage.getItem(this.id)){
-                this.$element.attr('value',localStorage.getItem(this.id));
-        }
-        $(document).on('input', '#'+this.id,
-            function(){
-                localStorage.setItem($(this).attr('id'),$(this).val());
-            }
-        );
-
-    };
-
-    this.get_html = function(){
-        return $('<div>').append(this.$element.clone()).html();
-    };
-
-    return this;
-}
-
-function Textarea(init){
-    'use strict';
-    var self = new Input(init);
-    self.type = '';
-    self.rows = init.rows?init.rows:5;
-    self.cols = init.cols?init.cols:60;
-    self.max_length = init.max_length === undefined? '1200': init.max_length;
-
-
-    self.init = function(){
-        self.$element = $('<textarea>',{
-            'id': self.id,
-            'placeholder': self.placeholder,
-            'rows': self.rows,
-            'cols': self.cols,
-            'maxlength': self.max_length
-        });
-        if(localStorage.getItem(self.id)){
-                self.$element.text(localStorage.getItem(self.id));
-        }
-        $(document).on('input', '#'+self.id,
-            function(){
-                localStorage.setItem($(this).attr('id'),$(this).val());
-            }
-        );
-    };
-
-    return self;
-}
 
 function section_nav(){
     'use strict';
@@ -78,100 +16,6 @@ function section_nav(){
         });
     $nav.append($prev, $next);
     return $nav;
-}
-
-//page - {title, input/text}
-//inputs - {id, input, type}
-function Page(page){
-    'use strict';
-    this.title = page.title;
-    this.inputs = [];
-    this.content = null;
-    this.$nav = section_nav();
-
-    if (page.inputs){
-        for( var i =0, l = page.inputs.length; i<l; i++ ){
-            if(page.inputs[i].type === 'textarea'){
-                this.inputs.push(new Textarea(page.inputs[i]));
-                continue;
-            }
-            this.inputs.push(new Input(page.inputs[i]));
-        }
-    }
-    if (page.text){
-        this.content = page.text;
-    }
-
-    this.get_html = function(){
-        var $html = $('<div>').addClass('page');
-
-        var $title = $('<div>').html('<h2>'+this.title+'</h2>');
-        $html.append($title);
-        if (this.inputs){
-            $.each(this.inputs, function(index, val) {
-                val.init();
-                $html.append(val.get_html());
-            });
-        }
-        if(this.content){
-            var $content = this.content;
-            $html.append($content);
-        }
-        $html.append(this.$nav);
-
-        return $('<div>').append($html.clone()).html();
-    };
-
-    return this;
-}
-
-function Section(name){
-    'use strict';
-    this.name = name;
-    this.pages = [];
-    this.current_page = 0;
-    this.$element = $('<section>').attr('id', name);
-    this.$wrapper = $('#section_wrapper');
-
-    this.init_pages = function(pages){
-        for (var i=0,l=pages.length; i<l; i++){
-            var page = new Page(pages[i]);
-            this.pages.push(page);
-        }
-
-        return true;
-    };
-
-    this.open_page = function(page_num){
-        this.$element.html(this.pages[page_num].get_html());
-        this.current_page = page_num;
-    };
-    this.next_page = function(){
-        var next = this.current_page+1;
-        if(next < this.pages.length){
-            this.open_page(next);
-            return true;
-        }
-        return false;
-    };
-    this.prev_page = function(){
-        var prev = this.current_page-1;
-        if(prev > -1){
-            this.open_page(prev);
-            return true;
-        }
-        return false;
-    };
-
-    this.show = function(){
-        this.$wrapper.append(this.$element);
-        this.open_page(this.current_page);
-    };
-    this.close = function(){
-        this.$element.detach();
-    };
-
-    return this;
 }
 
 function RenderHandler(){
@@ -240,6 +84,26 @@ function RenderHandler(){
             return false;
         }
     };
+    this.$pdf_page = null;
+    this.preview_show = function(){
+        var $pdf_page = $('<div>',{'id':'pdf_wrapper'});
+        $.each(localStorage, function(index, val) {
+            $pdf_page.append($('<div>',{'id':index}).text(val));
+        });
+        $('article').append($pdf_page);
+        this.$pdf_page = $pdf_page;
+    }
+    this.preview_close = function(){
+        this.$pdf_page.remove();
+    }
+    this.preview_toggle = function(){
+        if (!$('article').has(this.$pdf_page).length){
+            this.preview_show();
+        }
+        else{
+            this.preview_close();
+        }
+    }
 }
 
 function init_intro(){
@@ -349,5 +213,8 @@ g = new RenderHandler();
     });
     g.show('intro');
 
+    $("#preview").click(function(){
+        g.preview_toggle();
+    })
 
 })($, g);

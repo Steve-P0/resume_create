@@ -14,6 +14,7 @@
     <!-- endbuild -->
     <!-- build:css(.tmp) styles/main.css -->
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/pdf.css">
     <!-- endbuild -->
   </head>
   <body>
@@ -36,6 +37,9 @@
           <li class="nav__item" id="section5">item5</li>
           <li class="nav__item" id="section6">item6</li>
         </ul>
+        <div id="preview" class="nav__preview">
+          Предпросмотр
+        </div>
       </nav>
       <article>
         <div id="section_wrapper" class="section--wrapper">
@@ -61,6 +65,9 @@
     </script>
 
         <!-- build:js({app,.tmp}) scripts/main.js -->
+        <script src="scripts/partialy/input.js"></script>
+        <script src="scripts/partialy/page.js"></script>
+        <script src="scripts/partialy/section.js"></script>
         <script src="scripts/main.js"></script>
         <!-- endbuild -->
 </body>
