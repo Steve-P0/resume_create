@@ -1,5 +1,14 @@
 var g;
 
+var inputs_aliases={
+    'full_name':'ФИО',
+    'e-mail':'электронная почта',
+    'phone_number':'номер телефона',
+    'address':'адрес',
+    'portfolio':'портфолио',
+    'personal_statement_title':'О себе',
+    'personal_statement_body':'',
+}
 
 function section_nav(){
     'use strict';
@@ -84,116 +93,46 @@ function RenderHandler(){
             return false;
         }
     };
-    this.$pdf_page = null;
+    this.$pdf = null;
     this.preview_show = function(){
-        var $pdf_page = $('<div>',{'id':'pdf_wrapper'});
-        $.each(localStorage, function(index, val) {
-            $pdf_page.append($('<div>',{'id':index}).text(val));
+        var $pdf = $('<div>',{'id':'pdf'}).append(
+            $('<div>',{'id':'close'}).click(function(){g.preview_toggle()})
+        );
+        var $pdf_page = $('<div>',{'id':'pdf_page','class':'pdf__page'});
+        $.each(inputs_aliases, function(index, val) {
+            var $item = $('<div>',{'id':index,'class':'page__item'});
+                if (val != ''){
+                    $item.append($('<h3>',{'class':'title'}).text(val))
+                }
+                $item.append($('<span>',{'class':'content'}).text(localStorage[index]));
+            $pdf_page.append($item);
         });
-        $('article').append($pdf_page);
-        this.$pdf_page = $pdf_page;
+        $pdf.append($pdf_page);
+        $('article').append($pdf);
+        $pdf.siblings().hide();
+        this.$pdf = $pdf;
     }
     this.preview_close = function(){
-        this.$pdf_page.remove();
+        this.$pdf.siblings().show();
+        this.$pdf.remove();
     }
     this.preview_toggle = function(){
-        if (!$('article').has(this.$pdf_page).length){
+        if ($('.main').has(this.$pdf).length == 0){
             this.preview_show();
+            $('#preview').addClass('active').children().toggle();
         }
         else{
             this.preview_close();
+            $('#preview').removeClass('active').children().toggle();
         }
     }
-}
 
-function init_intro(){
-    'use strict';
-    var pages = [
-        {
-            'title':'',
-            'text': '<div class="intro__title"><img width="60" height="60" src="images/paper-black.svg"><h1>get<b>R</b>esume.tk</h1> Создавайте резюме просто и быстро. <br/>Пример можно посмотреть <a id="show_test" href="#test">тут</a>.</div><ul class="intro__about"><li><div class="about__title">Полностью бесплатно и очень просто</div><div class="about__content">Пошаговые инструкции сделают составление резюме легким и непринужденным. Навигация между шагами осуществляется с помощью кнопок вперед и назад. Мы не потребуем платы, никогда;</div></li><li><div class="about__title">Совместимо с браузером Chrome</div><div class="about__content">Удостоверьтесь что вы используете Google Chrome, хотя сервис может работать и в Firefox. Возможно не будет работать на мобильных устройствах, и откажется работать в Internet Explorer;</div></li><li><div class="about__title">Место прокрастинации</div><div class="about__content">Нашли что-то более веселое, чем составление своего резюме? Дерзайте, мы автоматически сохраняем текст который вы вводите, так что можете вернутся позже и продолжить с того места где вы остановились;</div></li><li><div class="about__title">Мы не воры</div><div class="about__content">Все что происходит на сайте, остается на сайте. Информация введенная вами на сайте никуда не посылается и не сохраняется ни на каких серверах, так что никто кроме вас не сможет её увидеть;</div></li><li><div class="about__title">Мы еще не закончили!</div><div class="about__content">Данный сервис находится в разработке, поэтому некоторые компоненты могут изменяться, но главная функция - создание резюме останется неизменной. Я по-прежнему работаю над улучшением сервиса, поэтому если у вас есть предложения, или вы нашли баг, пожалуйста напишите мне об этом на<a href="mailto:PodkinSA@gmail.com">почту</a>.</div></li></ul>'
-        }
-    ];
+    this.print = function(){
 
-    var IntroSection = new Section('intro');
-
-    IntroSection.init_pages(pages);
-
-    // IntroSection.$element = $('<section>').attr('id', 'intro');
-
-    return IntroSection;
-}
-
-function init_personal_information(){
-    'use strict';
-    var pages = [
-        {
-            'title':'Начнем с простого, ваши <b>ФИО</b>.',
-            'inputs':[{
-                'id':'full_name',
-                'placeholder':'Иванов Иван Иванович'
-            }]
-        },
-        {
-            'title':'Немного сложнее, ваш <b>e-mail</b>.',
-            'inputs':[{
-                            'id':'e-mail',
-                            'placeholder':'Ivanov@email.com'
-                        }]
-        },
-        {
-            'title':'Я понимаю, мы только что познакомились, но можешь оставить свой <b>номер телефона</b>?',
-            'inputs':[{
-                            'id':'phone_number',
-                            'placeholder':'+7 999 333 8877'
-                        }]
-        },
-        {
-            'title':'Не сочти за наглость, но мне нужен твой <b>адрес</b>.',
-            'inputs':[{
-                            'id':'address',
-                            'placeholder':'г.Пермь, ул. Академика Королёва, 15'
-                        }]
-        },
-        {
-            'title':'У тебя есть <b>портфолио</b>, или <b>linkedin</b>, хоть что-нибудь?',
-            'inputs':[{
-                            'id':'portfolio',
-                            'placeholder':'www.linkedin.com'
-                        }]
-        },
-    ];
-
-    var PersonalInformationSection = new Section('personal_information');
-
-    PersonalInformationSection.init_pages(pages);
-
-    // PersonalInformationSection.$element = $('<section>').attr('id', 'personal_information');
-
-    return PersonalInformationSection;
-}
-
-function init_personal_statement(){
-    'use strict';
-    var pages = [
-        {
-            'title':'Хочешь указать какую-либо информацию о себе? Если нет, тебя никто не осудит.',
-            'inputs':[{
-                'id':'personal_statement_title',
-                'placeholder':'Пара слов о себе:'
-            },{
-                'id':'personal_statement_body',
-                'placeholder':'Великодушный, гениальный, неуступчивый...',
-                'type': 'textarea'
-            }
-            ]
-        },
-    ];
-
-    var PersonalStatementSection = new Section('personal_statement');
-    PersonalStatementSection.init_pages(pages);
-    // PersonalInformationSection.$element = $('<section>')
-    return PersonalStatementSection;
+        $('body').append($('<div>',{'id':'print_page'}).append($('#pdf_page').clone()));
+        window.print();
+        $('#print_page').remove();
+    }
 }
 
 g = new RenderHandler();
@@ -212,9 +151,17 @@ g = new RenderHandler();
         event.preventDefault();
     });
     g.show('intro');
-
-    $("#preview").click(function(){
+    $('#preview div').on('selectstart', function() {
+        event.preventDefault();
+    });
+    $('#preview .show').click(function(){
         g.preview_toggle();
-    })
+    });
+    $('#preview .back').click(function(){
+        g.preview_toggle();
+    });
+    $('#preview .print').click(function(){
+        g.print();
+    });
 
 })($, g);

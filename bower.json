@@ -1,0 +1,7 @@
+{
+  "name": "resume-create",
+  "private": true,
+  "dependencies": {
+    "jquery": "~1.11.1"
+  }
+}

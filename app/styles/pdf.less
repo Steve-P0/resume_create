@@ -1,4 +1,59 @@
-#pdf_wrapper{
-    width: 210mm;
-    word-wrap: break-word;
+@font-size:12pt;
+
+#pdf{
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  top: 0;
+  font-size:@font-size;
+  .pdf{
+    &__page{
+      width: 210mm;
+      word-wrap: break-word;
+      margin: 20px auto;
+      box-shadow: 0 0 20px 10px rgba(0,0,0,.1);
+      h3{
+        font-size:@font-size+2;
+        display: inline-block;
+        &::after{
+          content: ':';
+          padding-right: 10px;
+        }
+      }
+      .page{
+        &__item{
+          margin-bottom: 10px;
+        }
+      }
+    }
+  }
+  #close {
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    // background-color: white;
+    right: 15px;
+    top: 15px;
+    cursor: pointer;
+
+    &::before{
+      display: block;
+      content: '';
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      left: 10px;
+      top: 10px;
+      background-size: contain;
+      background-image:url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMCIgaGVpZ2h0PSIxMCIgdmlld0JveD0iMCAwIDEwIDEwIj48cGF0aCBmaWxsLXJ1bGU9ImV2ZW5vZGQiIGNsaXAtcnVsZT0iZXZlbm9kZCIgZmlsbD0iIzhDODc4MiIgZD0iTTEwLDEwSDguNTg2TDUsNi40MTRMMS40MTQsMTBIMFY4LjU4NUwzLjU4Niw1TDAsMS40MTRWMGgxLjQxNCBMNSwzLjU4NUw4LjU4NiwwSDEwdjEuNDE0TDYuNDE0LDVMMTAsOC41ODVWMTB6Ii8+PC9zdmc+");
+    }
+    &:hover{
+      opacity: .7;
+      // background-color: transparent;
+      transition: all 1s;
+    }
+  }
 }
+
+

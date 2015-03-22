@@ -13,10 +13,12 @@ abbr,acronym { border: 0;}
 @font-size: 10pt;
 @line-height: 1.5;
 @nav-color:#00557f;
-@nav-link-color:#ee2950;
+@nav-link-color: tomato;
 @link-color:#ee2950;
 @text-color:#333;
-
+.std-transition-timing-function(){
+  transition-timing-function: cubic-bezier(0,1.13,.62,.97);
+}
 @media (max-device-width : 1290px){
   nav{
     display: none;
@@ -45,6 +47,7 @@ a:hover{
   color:#fff;
   background-color: @link-color;
   transition: background-color 0.5s, color 1s;
+  .std-transition-timing-function();
 }
 ul{
   list-style-type: none;
@@ -91,26 +94,62 @@ nav{
       color: white;
       font-weight: bold;
       cursor: pointer;
+      transition: 1s all;
+      .std-transition-timing-function();
+      &:hover{
+        background-color:darken( @nav-link-color, 5);
+      }
       &.active{
         background-color: @nav-link-color;
+        border-left: 15px solid white;
       }
     }
-    &__preview{
-      position: absolute;
-      bottom: 0;
+  }
+}
+
+.nav__preview{
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 40px;
+  text-align: center;
+  text-transform: uppercase;
+  font-size: @font-size+2;
+  background-color: #FFFAF0;
+  cursor: pointer;
+  &.active{
+    height: 100%;
+  }
+  &:hover{
+    background-color: lighten(@nav-link-color, 20%);
+    transition: background-color 0.7s, all .5s;
+    .std-transition-timing-function();
+  }
+  .preview__controls{
+    height: 100%;
+    display: none;
+    &>div{
+      display: inline-block;
       width: 100%;
-      height: 40px;
-      line-height: 40px;
-      text-align: center;
-      text-transform: uppercase;
-      font-size: @font-size+2;
-      background-color: #FFFAF0;
-      cursor: pointer;
+      height: 50%;
+      vertical-align: middle;
+      &::before{
+        content: '';
+        height: 100%;
+        vertical-align: middle;
+        display: inline-block;
+      }
       &:hover{
-        background-color: #ffc4c2;
-        transition: all 0.7s ease-out;
+        border-left: solid 15px @nav-link-color;
+        background-color: white;
+        transition: all 1s;
+        .std-transition-timing-function();
       }
     }
+  }
+  .show{
+      height: 100%;
+      line-height: 40px;
   }
 }
 
@@ -134,6 +173,11 @@ article{
     margin: 20px auto 20px;
     box-shadow: 0px 0px 10px 1px;
     padding: 10mm 10mm 10mm 15mm;
+    &#intro{
+      h2{
+        display: none;
+      }
+    }
   }
 }
 
@@ -218,4 +262,13 @@ article{
       }
     }
   }
+}
+
+#print_page{
+  box-shadow: none;
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background-color: #fff;
 }
